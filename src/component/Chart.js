@@ -7,26 +7,38 @@ export class Chart extends React.Component {
   constructor(props) {
     super(props);
     this.state = {};
-    // this.getData = this.getData.bind(this);
+    this.getHighChart = this.getHighChart.bind(this);
   }
 
-  async componentDidMount() {
-    const url = "http://127.0.0.1:8000/stock/";
-    const response = await fetch(url);
-    const jsonResponse = await response.json();
-    console.log(jsonResponse);
-    let stocks = [];
-    jsonResponse.results.forEach((obj) => {
-      stocks.push([parseInt(obj.date) * 1000, obj.data]);
-    });
-    this.setState({stocks: stocks}, () => {
-      console.log(this.state);
-    });
+  componentDidMount() {
+    this.getHighChart();
+  }
 
+  //fetch data from restful api and render chart
+  getHighChart() {
+    const that = this;
+    // url for reading restful api
+    const url = "http://127.0.0.1:8000/stock/";
+    fetch(url)
+      .then(promise => {
+        return promise.json()
+      })
+      .then(response => {
+        return Promise.resolve(response)
+      })
+      .then(jsonResponse => {
+        // console.log(jsonResponse);
+        let stocks = jsonResponse.results.map((obj) => {
+          //TODO fix datetime setting to microseconds
+          return ([parseInt(obj.date) * 1000, obj.data]);
+        });
+        that.setState({stocks: stocks});
+      });
 
   }
 
   render() {
+    //options for HighchartsReact settings
     const options = {
       rangeSelector: {
         selected: 1
@@ -37,7 +49,7 @@ export class Chart extends React.Component {
       },
       xAxis: {
         type: 'datetime',
-        min: 1520063200000,
+        min: 1520063200000, //TODO fix mix and max settings
         max: 1702269785200,
 
         tickInterval: 24 * 3600 * 1000,
