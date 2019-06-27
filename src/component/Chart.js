@@ -2,12 +2,13 @@ import * as React from "react";
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
 import {Urls} from "../utils/Urls";
+import {RequestUtils} from "../utils/RequestUtils";
 
 export class Chart extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {stocks: [],};
+    this.state = {stocks: [], buyDate: 0, sellDate: 0};
     this.getHighChart = this.getHighChart.bind(this);
     this.getMaximumProfit = this.getMaximumProfit.bind(this);
   }
@@ -22,24 +23,15 @@ export class Chart extends React.Component {
   getHighChart() {
     fetch(Urls.STOCK_DATA)
       .then(responsePromise => {
-        if (200 === responsePromise.status) {
-          responsePromise.json().then(promise => {
-            return Promise.resolve(promise)
-          }).then(jsonResponse => {
-            console.log(jsonResponse);
-            let stocks = jsonResponse.results.map((obj) => {
-              return ([Date.parse(obj.date), obj.data]);
-            });
-            this.setState({stocks: stocks}, () => {
-              console.log(this.state);
-            });
-          });
-        } else {
-          responsePromise.json().then(promise => {
-            return Promise.reject(promise)
-          });
 
-        }
+        RequestUtils(responsePromise,(jsonResponse)=>{
+          console.log(jsonResponse);
+          let stocks = jsonResponse.map((obj) => {
+            return ([Date.parse(obj.date), obj.close_price]);
+          });
+          this.setState({stocks: stocks});
+        });
+
       })
 
 
@@ -49,23 +41,12 @@ export class Chart extends React.Component {
   getMaximumProfit() {
     fetch(Urls.PROFIT_LINE)
       .then(responsePromise => {
-        if (200 === responsePromise.status) {
-          responsePromise.json().then(promise => {
-            return Promise.resolve(promise)
-          }).then(jsonResponse => {
-            console.log(jsonResponse);
-            let buyDate = Date.parse(jsonResponse.buy_date);
-            let sellDate = Date.parse(jsonResponse.sell_date);
-            this.setState({buyDate: buyDate, sellDate: sellDate}, () => {
-              console.log(this.state);
-            });
-          });
-        } else {
-          responsePromise.json().then(promise => {
-            return Promise.reject(promise)
-          });
-
-        }
+        RequestUtils(responsePromise,(jsonResponse)=>{
+          // console.log(jsonResponse);
+          let buyDate = Date.parse(jsonResponse.buy_date);
+          let sellDate = Date.parse(jsonResponse.sell_date);
+          this.setState({buyDate: buyDate, sellDate: sellDate});
+        });
       })
 
   }
@@ -80,15 +61,18 @@ export class Chart extends React.Component {
       title: {
         text: 'AAPL Stock Price'
       },
+      subtitle: {
+        text: 'Using data from intrinio.com'
+      },
       xAxis: {
         type: 'datetime',
         tickInterval: 24 * 3600 * 1000,
         labels: {
-          format: '{value:%e.%b}'
+          format: '{value:%b %Y}'
         },
       },
       series: [{
-        name: 'AAPL',
+        name: 'daily close price',
         data: this.state.stocks,
         tooltip: {
           valueDecimals: 2
