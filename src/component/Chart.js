@@ -19,13 +19,14 @@ export class Chart extends React.Component {
   }
 
 
-  //fetch data from restful api and render chart
+  /*
+   * fetch data from restful api and render chart
+   */
   getHighChart() {
     fetch(Urls.STOCK_DATA)
       .then(responsePromise => {
 
         RequestUtils(responsePromise,(jsonResponse)=>{
-          console.log(jsonResponse);
           let stocks = jsonResponse.map((obj) => {
             return ([Date.parse(obj.date), obj.close_price]);
           });
@@ -37,12 +38,13 @@ export class Chart extends React.Component {
 
   }
 
-  //get maximum profit line in charts
+  /**
+   * get maximum profit line in charts
+   */
   getMaximumProfit() {
     fetch(Urls.PROFIT_LINE)
       .then(responsePromise => {
         RequestUtils(responsePromise,(jsonResponse)=>{
-          // console.log(jsonResponse);
           let buyDate = Date.parse(jsonResponse.buy_date);
           let sellDate = Date.parse(jsonResponse.sell_date);
           this.setState({buyDate: buyDate, sellDate: sellDate});
@@ -57,7 +59,9 @@ export class Chart extends React.Component {
       rangeSelector: {
         selected: 1
       },
-
+      chart: {
+        zoomType: 'x'
+      },
       title: {
         text: 'AAPL Stock Price'
       },
@@ -82,7 +86,7 @@ export class Chart extends React.Component {
           value: this.state.buyDate
         }, {
           value: this.state.sellDate,
-          color: '#FF6833'
+          color: '#ff020a'
         }]
       }],
 

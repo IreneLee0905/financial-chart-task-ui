@@ -1,5 +1,6 @@
-
-//This function is used for solving promise from fetch
+/**
+ * This function is used for solving promise from fetch
+ */
 export function RequestUtils(responsePromise, callback) {
   if (200 === responsePromise.status) {
     responsePromise.json().then(promise => {
