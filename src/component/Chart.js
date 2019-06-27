@@ -1,39 +1,72 @@
 import * as React from "react";
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
+import {Urls} from "../utils/Urls";
 
 export class Chart extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {stocks: [],};
     this.getHighChart = this.getHighChart.bind(this);
+    this.getMaximumProfit = this.getMaximumProfit.bind(this);
   }
 
   componentDidMount() {
     this.getHighChart();
+    this.getMaximumProfit();
   }
+
 
   //fetch data from restful api and render chart
   getHighChart() {
-    const that = this;
-    // url for reading restful api
-    const url = "http://127.0.0.1:8000/stock/";
-    fetch(url)
-      .then(promise => {
-        return promise.json()
+    fetch(Urls.STOCK_DATA)
+      .then(responsePromise => {
+        if (200 === responsePromise.status) {
+          responsePromise.json().then(promise => {
+            return Promise.resolve(promise)
+          }).then(jsonResponse => {
+            console.log(jsonResponse);
+            let stocks = jsonResponse.results.map((obj) => {
+              return ([Date.parse(obj.date), obj.data]);
+            });
+            this.setState({stocks: stocks}, () => {
+              console.log(this.state);
+            });
+          });
+        } else {
+          responsePromise.json().then(promise => {
+            return Promise.reject(promise)
+          });
+
+        }
       })
-      .then(response => {
-        return Promise.resolve(response)
+
+
+  }
+
+  //get maximum profit line in charts
+  getMaximumProfit() {
+    fetch(Urls.PROFIT_LINE)
+      .then(responsePromise => {
+        if (200 === responsePromise.status) {
+          responsePromise.json().then(promise => {
+            return Promise.resolve(promise)
+          }).then(jsonResponse => {
+            console.log(jsonResponse);
+            let buyDate = Date.parse(jsonResponse.buy_date);
+            let sellDate = Date.parse(jsonResponse.sell_date);
+            this.setState({buyDate: buyDate, sellDate: sellDate}, () => {
+              console.log(this.state);
+            });
+          });
+        } else {
+          responsePromise.json().then(promise => {
+            return Promise.reject(promise)
+          });
+
+        }
       })
-      .then(jsonResponse => {
-        // console.log(jsonResponse);
-        let stocks = jsonResponse.results.map((obj) => {
-          //TODO fix datetime setting to microseconds
-          return ([parseInt(obj.date) * 1000, obj.data]);
-        });
-        that.setState({stocks: stocks});
-      });
 
   }
 
@@ -49,9 +82,6 @@ export class Chart extends React.Component {
       },
       xAxis: {
         type: 'datetime',
-        min: 1520063200000, //TODO fix mix and max settings
-        max: 1702269785200,
-
         tickInterval: 24 * 3600 * 1000,
         labels: {
           format: '{value:%e.%b}'
@@ -62,8 +92,16 @@ export class Chart extends React.Component {
         data: this.state.stocks,
         tooltip: {
           valueDecimals: 2
-        }
-      }]
+        },
+        zoneAxis: 'x',
+        zones: [{
+          value: this.state.buyDate
+        }, {
+          value: this.state.sellDate,
+          color: '#FF6833'
+        }]
+      }],
+
 
     };
     return (
